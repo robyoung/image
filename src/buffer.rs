@@ -1035,6 +1035,14 @@ pub trait ConvertBuffer<T> {
     /// A generic implementation is provided to convert any image buffer to a image buffer
     /// based on a `Vec<T>`.
     fn convert(&self) -> T;
+
+    /// Converts and writes `self` into a provided buffer of type T
+    ///
+    /// A generic implementation is provided to convert any image buffer to a image buffer
+    /// based on a `Vec<T>`.
+    ///
+    /// Panics if the two buffers are not the same size.
+    fn convert_into(&self, buf: &mut T);
 }
 
 // concrete implementation Luma -> Rgba
@@ -1086,10 +1094,17 @@ where
     fn convert(&self) -> ImageBuffer<ToType, Vec<ToType::Subpixel>> {
         let mut buffer: ImageBuffer<ToType, Vec<ToType::Subpixel>> =
             ImageBuffer::new(self.width, self.height);
+        self.convert_into(&mut buffer);
+        buffer
+    }
+
+    fn convert_into(&self, buffer: &mut ImageBuffer<ToType, Vec<ToType::Subpixel>>) {
+        assert_eq!(self.width, buffer.width);
+        assert_eq!(self.height, buffer.height);
+
         for (to, from) in buffer.pixels_mut().zip(self.pixels()) {
             to.from_color(from)
         }
-        buffer
     }
 }
 
